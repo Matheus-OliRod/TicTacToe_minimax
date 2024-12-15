@@ -4,7 +4,7 @@ Tic Tac Toe is a classic two-player game where players compete on a 3x3 grid, ai
 
 ## Project Overview
 
-This project is developed in Java, using native Java APIs for testing and rendering the game window. 
+This project is developed in Java, using native Java APIs for testing and rendering the game window (Therefore JUnit is not being used). 
 
 The game offers two modes of play:
 1. **Local Multiplayer**: Players share the same computer and take turns.
