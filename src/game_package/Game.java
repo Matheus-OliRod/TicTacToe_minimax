@@ -5,7 +5,6 @@ import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.awt.List;
 import java.awt.Dimension;
 import java.awt.Font;
 
@@ -13,7 +12,6 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -90,7 +88,7 @@ public class Game extends JPanel {
         for(int i = 0; i < 9; i++) {
             int index = i;
             spots[i] = new JButton();
-            spots[i].addActionListener(e -> {
+            spots[i].addActionListener(e ->{
 
                 if(!isPlayer1Turn && AIlevel > -1)
                     return;
@@ -264,6 +262,7 @@ public class Game extends JPanel {
         int bestIndex = -1;
         int heighest = -1; // -1 is a lost game, 0 is tie or on going match
     
+        // Making its move
         for(int i = 0; i < availableSpots.length; i++) {
     
             // making it find itself winning "attractive"
@@ -275,7 +274,9 @@ public class Game extends JPanel {
             
             isPlayer1Turn = !isPlayer1Turn;
 
+            // Predicting if it loses or draws
            for(int j = 0; j < availableSpots.length; j++) {
+            
             if(availableSpots[i] == availableSpots[j]) // Ignoring the already marked spot
                 continue;
 

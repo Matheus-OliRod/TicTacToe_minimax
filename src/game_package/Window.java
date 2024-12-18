@@ -50,7 +50,7 @@ public class Window extends JFrame {
         gameModeSelector = new ButtonGroup();
         difficultySelector = new ButtonGroup();
 
-        // Adding the radio buttons to their groups
+        // Adding the radio buttons to their group
 
         for(JRadioButton rb : gameModes) {
             gameModeSelector.add(rb);
@@ -59,18 +59,13 @@ public class Window extends JFrame {
         // Adding action listeners to change the difficulty panel visibility and set the AI level to -1 if singleplayer is selected
 
         gameModes[0].addActionListener(e -> {
-            difficultyPanel.setVisible(gameModes[1].isSelected());
-            if(!gameModes[1].isSelected())
-                gamePanel.setAIlevel(-1);
-            else
-                gamePanel.setAIlevel(0);
+            difficultyPanel.setVisible(false);
+            gamePanel.setAIlevel(-1);
             });
+
         gameModes[1].addActionListener(e -> {
-            difficultyPanel.setVisible(gameModes[1].isSelected());
-            if(!gameModes[1].isSelected())
-                gamePanel.setAIlevel(-1);
-            else
-                gamePanel.setAIlevel(0);
+            difficultyPanel.setVisible(true);
+            gamePanel.setAIlevel(0);
         });
 
         for(JRadioButton rb : difficulties) {
