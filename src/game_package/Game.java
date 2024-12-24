@@ -93,6 +93,9 @@ public class Game extends JPanel {
                 if(!isPlayer1Turn && AIlevel > -1)
                     return;
 
+                if(!spots[index].getText().equals(""))
+                    return;
+
                 markSpot(index);
                 isPlayer1Turn = !isPlayer1Turn;
                 headerLabel.setText(isPlayer1Turn ? "X Turn" : "O Turn");
@@ -121,6 +124,7 @@ public class Game extends JPanel {
      * @param index
      */
     protected void markSpot(int index) {
+
         if(!spots[index].getText().equals(""))
             return;
 
@@ -189,7 +193,7 @@ public class Game extends JPanel {
         if(isTie)
             headerLabel.setText("Tie");
         else
-            headerLabel.setText((!isPlayer1Turn ? "Player 1" : "Player 2") + " Won!");
+            headerLabel.setText((!isPlayer1Turn ? "Player 1" : (AIlevel > -1 ? "AI" : "Player 2")) + " Won!");
         
             goToStartButton.setVisible(true);
     }
@@ -230,86 +234,26 @@ public class Game extends JPanel {
         switch (AIlevel) {
             case 0:
                 makeRandomMove(getAvailableSpots());
+                isPlayer1Turn = !isPlayer1Turn;
+                headerLabel.setText(isPlayer1Turn ? "X Turn" : "O Turn");
                 break;
         
             case 1:
                 makeMediumMove(getAvailableSpots());
+                isPlayer1Turn = !isPlayer1Turn;
+                headerLabel.setText(isPlayer1Turn ? "X Turn" : "O Turn");
                 break;
             
-            case 2: makeBestMove(getAvailableSpots());
+            case 2:
+                makeBestMove(getAvailableSpots());
+                isPlayer1Turn = !isPlayer1Turn;
+                headerLabel.setText(isPlayer1Turn ? "X Turn" : "O Turn");
                 break;
 
             default:
                 break;
         }
-    }
 
-    /**
-     * Will mark a random available spot of the game grid
-     * @param availableSpots
-     */
-    private void makeRandomMove(int[] availableSpots) {
-        markSpot(availableSpots[rand.nextInt(availableSpots.length)]);
-        isPlayer1Turn = !isPlayer1Turn;
-        headerLabel.setText(isPlayer1Turn ? "X Turn" : "O Turn");
-    }
-
-    /**
-     * Will mark the least worse move, where it won't lose the next move and preferelly will win if it can
-     * @param availableSpots
-     */
-    private void makeMediumMove(int[] availableSpots) {
-        int bestIndex = -1;
-        int heighest = -1; // -1 is a lost game, 0 is tie or on going match
-    
-        // Making its move
-        for(int i = 0; i < availableSpots.length; i++) {
-    
-            // making it find itself winning "attractive"
-           markSpot(availableSpots[i]);
-           if(hasWinner() || isTie()) {
-               bestIndex = availableSpots[i];
-               heighest = 1;
-            }
-            
-            isPlayer1Turn = !isPlayer1Turn;
-
-            // Predicting if it loses or draws
-           for(int j = 0; j < availableSpots.length; j++) {
-            
-            if(availableSpots[i] == availableSpots[j]) // Ignoring the already marked spot
-                continue;
-
-            markSpot(availableSpots[j]);
-            isPlayer1Turn = !isPlayer1Turn;
-
-            if(hasWinner()) {
-                clearSpot(availableSpots[j]);
-                isPlayer1Turn = !isPlayer1Turn;
-                if(heighest != 1) bestIndex = availableSpots[j]; // This prevents the player from winning in 1 *IF* the player has only one win and the AI doesn't have a winning move
-                continue;
-            }
-
-            if(isTie() && heighest < 0) {
-                bestIndex = availableSpots[i];
-                heighest = 0;
-            }
-
-            if(heighest < 0) {
-                bestIndex = availableSpots[i];
-                heighest = 0;
-            }
-
-            clearSpot(availableSpots[j]);
-            isPlayer1Turn = !isPlayer1Turn;
-           }
-            
-           clearSpot(availableSpots[i]);
-           isPlayer1Turn = !isPlayer1Turn;
-        }
-
-        markSpot(bestIndex);
-        
         if(hasWinner()) {
             gameEnd(false);
             return;
@@ -318,16 +262,179 @@ public class Game extends JPanel {
             gameEnd(true);
             return;
         }
-        
-        isPlayer1Turn = !isPlayer1Turn;
-        headerLabel.setText(isPlayer1Turn ? "X Turn" : "O Turn");
     }
 
+    /**
+     * Will mark a random available spot of the game grid
+     * @param availableSpots All available spots on the game grid
+     */
+    private void makeRandomMove(int[] availableSpots) {
+        markSpot(availableSpots[rand.nextInt(availableSpots.length)]);
+    }
+
+    /**
+     * Will mark the least worse move, where it won't lose the next move and preferelly will win if it can
+     * @param availableSpots All available spots on the game grid
+     */
+    private void makeMediumMove(int[] availableSpots) {
+        int bestIndex = 0;
+        int highest = -1; // -1 is a lost game, 0 is tie or on going match
+    
+        // Making its move
+        for(int i : availableSpots) {
+    
+            // making it find itself winning "attractive"
+           markSpot(i);
+           if(hasWinner() || isTie()) {
+               bestIndex = i;
+               highest = 1;
+            }
+            
+            isPlayer1Turn = !isPlayer1Turn;
+
+            // Predicting if it loses or draws
+           for(int j : availableSpots) {
+
+            if(i == j) // Ignoring the already marked spot
+                continue;
+
+            markSpot(j);
+            isPlayer1Turn = !isPlayer1Turn;
+
+            if(hasWinner()) {
+                clearSpot(j);
+                isPlayer1Turn = !isPlayer1Turn;
+                if(highest != 1) bestIndex = j; // This prevents the player from winning in 1 *IF* the player has only one win and the AI doesn't have a winning move
+                continue;
+            }
+
+            if(isTie() && highest < 0) {
+                bestIndex = i;
+                highest = 0;
+            }
+
+            if(highest < 0) {
+                bestIndex = i;
+                highest = 0;
+            }
+
+            clearSpot(j);
+            isPlayer1Turn = !isPlayer1Turn;
+           }
+            
+           clearSpot(i);
+           isPlayer1Turn = !isPlayer1Turn;
+        }
+
+        markSpot(bestIndex);
+    }
+
+    /**
+     * Will use minimax to find the best path for itself, will draw or win, but never lose
+     * @param availableSpots All available spots on the game grid
+     */
     private void makeBestMove(int[] availableSpots) {
-
+        int bestIndex = -1;
+        int bestOutcome = Integer.MIN_VALUE;
+    
+        // First, check for immediate win or loss
+        bestIndex = checkImmediateWinOrLoss(availableSpots);
+        if (bestIndex != -1) {
+            markSpot(bestIndex);
+            return;
+        }
+    
+        // If no immediate win/loss, run minimax for the best move
+        for (int i : availableSpots) {
+            markSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+    
+            int currentAnalysis = minimax(getAvailableSpots(), 0);
+    
+            // Restore the spot
+            clearSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+    
+            if (currentAnalysis > bestOutcome) {
+                bestOutcome = currentAnalysis;
+                bestIndex = i;
+            }
+        }
+        markSpot(bestIndex);
     }
+    
+    // Helper method for checking immediate win or loss
+    private int checkImmediateWinOrLoss(int[] availableSpots) {
+        // Check for immediate win
+        for (int i : availableSpots) {
+            markSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+            if (hasWinner() && isPlayer1Turn) {
+                clearSpot(i);
+                isPlayer1Turn = !isPlayer1Turn;
+                return i; // Immediate win found, return the move
+            }
+            clearSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+        }
+    
+        // Check for immediate loss (block the opponent)
+        for (int i : availableSpots) {
+            markSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+            for(int j : availableSpots) {
+                if(j == i) continue; // Ignores the already marked spot
+
+                markSpot(j);
+                isPlayer1Turn = !isPlayer1Turn;
+
+                if(hasWinner()) {
+                    clearSpot(j);
+                    clearSpot(i);
+                    return j;
+                }
+
+                clearSpot(j);
+                isPlayer1Turn = !isPlayer1Turn;
+                
+            }
+                clearSpot(i);
+                isPlayer1Turn = !isPlayer1Turn;
+        }
+    
+        return -1; // No immediate win or loss
+    }
+    
+    // Minimax algorithm (no changes, same as before)
+    private int minimax(int[] availableSpots, int depth) {
+        // Handling end game cases
+        if (hasWinner())
+            return isPlayer1Turn ? -1 + depth : 1 - depth;
+        
+        if (isTie())
+            return 0;
+    
+        int bestScore = isPlayer1Turn ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+    
+        // Recursively explore all available spots
+        for (int i : availableSpots) {
+            markSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+            int score = minimax(getAvailableSpots(), depth + 1);
+            clearSpot(i);
+            isPlayer1Turn = !isPlayer1Turn;
+    
+            // Minimize score for Player, maximize for AI
+            if (isPlayer1Turn) {
+                bestScore = Math.min(score, bestScore);
+            } else {
+                bestScore = Math.max(score, bestScore);
+            }
+        }
+    
+        return bestScore;
+    }
+    
+
 }
-
-
-
 
